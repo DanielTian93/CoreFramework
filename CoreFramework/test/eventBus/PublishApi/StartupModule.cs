@@ -1,7 +1,7 @@
 ﻿using Core.EventBus.RabbitMQ;
+using Core.EventBus.SqlServer;
 using Core.Modularity;
 using Core.Modularity.Attribute;
-using Core.RabbitMQ;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,7 +9,8 @@ using Microsoft.Extensions.Hosting;
 
 namespace PublishApi
 {
-    [DependsOn(typeof(CoreEventBusRabbitMqModule))]
+    [DependsOn(typeof(CoreEventBusRabbitMqModule),
+        typeof(CoreEventBusSqlServerModule))]
     public class StartupModule : CoreModuleBase
     {
         public IConfiguration Configuration { get; }
@@ -21,12 +22,9 @@ namespace PublishApi
         public override void ConfigureServices(ServiceCollectionContext context)
         {
             context.Services.AddControllers();
-
-            var rabbitMqOptions = new RabbitMqOptions();
-            Configuration.GetSection("RabbitMq").Bind(rabbitMqOptions);
-            context.Services.Configure<RabbitMqOptions>(options =>
+            context.Services.Configure<EventBusSqlServerOptions>(options =>
             {
-                options.Connection = rabbitMqOptions.Connection;
+                options.ConnectionString = Configuration.GetConnectionString("customer");
             });
         }
 
